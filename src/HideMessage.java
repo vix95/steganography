@@ -31,12 +31,10 @@ public class HideMessage {
                 String line = scanner.nextLine();
                 String prepared_line = null;
 
-                if (this.hexPos < this.message.size()) {
-                    if (att.equals("-1")) prepared_line = this.additionalSpaceAtEndOfLine(line);
-                    //else if (att.equals("-2")) prepared_line = singleOrDoubleSpace(line);
-                    //else if (att.equals("-3")) prepared_line = typosInAttributeNames(line);
-                    //else if (att.equals("-4")) prepared_line = sequencesClosingAndOpeningTags(line);
-                }
+                if (att.equals("-1")) prepared_line = this.additionalSpaceAtEndOfLine(line);
+                else if (att.equals("-2")) prepared_line = this.singleOrDoubleSpace(line);
+                //else if (att.equals("-3")) prepared_line = typosInAttributeNames(line);
+                //else if (att.equals("-4")) prepared_line = sequencesClosingAndOpeningTags(line);
 
                 if (prepared_line != null) {
                     writer.write(prepared_line);
@@ -47,7 +45,8 @@ public class HideMessage {
             writer.close();
             scanner.close();
         } catch (Exception e) {
-            System.out.print("Error: something goes wrong. Cannot hide message.\n");
+            e.printStackTrace();
+            //System.out.print("Error: something goes wrong. Cannot hide message.\n");
         }
     }
 
@@ -56,21 +55,44 @@ public class HideMessage {
         StringBuilder preparedLine = new StringBuilder();
         preparedLine.append(line);
 
-        String binaries = hexToBin(this.message.get(this.hexPos));
-        int bin = binaries.toCharArray()[this.bitPos] - 48;
-        this.nextBit();
-
         // 0 - no space, 1 - space
+        int bin = this.getBin();
         if (bin == 1) preparedLine.append(' ');
         return preparedLine.toString();
     }
 
-    /*
     // single or double space
     private String singleOrDoubleSpace(String line) {
+        StringBuilder preparedLine = new StringBuilder();
+        boolean open_tag = false;
+        boolean close_tag = false;
 
+        for (char c : line.toCharArray()) {
+            if (c == '<') open_tag = true;
+            if (c == '>') close_tag = true;
+
+            // if I'm on the between < and > then I can modify spaces
+            if (open_tag) {
+                if (c == ' ') {
+                    int bin = this.getBin();
+
+                    // if 0 the single space, if 1 then duplicate space
+                    if (bin == 1) preparedLine.append(' ');
+                }
+            }
+
+            if (close_tag) {
+                open_tag = false;
+                close_tag = false;
+            }
+
+            preparedLine.append(c);
+        }
+
+        return preparedLine.toString();
     }
 
+    /*
     // typos in attribute names
     private String typosInAttributeNames(String line) {
 
@@ -82,6 +104,17 @@ public class HideMessage {
     }
 
      */
+
+    private int getBin() {
+        if (this.hexPos < this.message.size()) {
+            String binaries = hexToBin(this.message.get(this.hexPos));
+            int bin = binaries.toCharArray()[this.bitPos] - 48;
+            this.nextBit();
+            return bin;
+        }
+
+        return 0;
+    }
 
     private void nextBit() {
         this.bitPos++;

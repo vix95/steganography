@@ -1,6 +1,7 @@
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -22,7 +23,7 @@ public class UnhideMessage {
                 String line = scanner.nextLine();
 
                 if (att.equals("-1")) binariesArrayList.add(this.additionalSpaceAtEndOfLine(line));
-                //else if (att.equals("-2")) prepared_line = singleOrDoubleSpace(line);
+                else if (att.equals("-2")) this.singleOrDoubleSpace(binariesArrayList, line);
                 //else if (att.equals("-3")) prepared_line = typosInAttributeNames(line);
                 //else if (att.equals("-4")) prepared_line = sequencesClosingAndOpeningTags(line);
             }
@@ -48,7 +49,8 @@ public class UnhideMessage {
             writer.write(detectMessage.toString());
             writer.close();
         } catch (Exception e) {
-            System.out.print("Error: something goes wrong. Cannot unhide message.\n");
+            e.printStackTrace();
+            //System.out.print("Error: something goes wrong. Cannot unhide message.\n");
         }
     }
 
@@ -60,12 +62,36 @@ public class UnhideMessage {
         } else return 0;
     }
 
-    /*
     // single or double space
-    private String singleOrDoubleSpace(String line) {
+    private void singleOrDoubleSpace(ArrayList<Integer> binariesArrayList, String line) {
+        boolean open_tag = false;
+        boolean close_tag = false;
 
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.toCharArray()[i];
+            if (c == '<') open_tag = true;
+            if (c == '>') close_tag = true;
+
+            // if I'm on the between < and > then I can read spaces
+            if (open_tag) {
+                if (c == ' ') {
+                    i++;
+                    c = line.toCharArray()[i];
+
+                    // if next char is a space as well then I can read 1, otherwise I can read 0
+                    if (c == ' ') binariesArrayList.add(1);
+                    else binariesArrayList.add(0);
+                }
+            }
+
+            if (close_tag) {
+                open_tag = false;
+                close_tag = false;
+            }
+        }
     }
 
+    /*
     // typos in attribute names
     private String typosInAttributeNames(String line) {
 
