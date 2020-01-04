@@ -14,64 +14,24 @@ public class Stegano {
                 String cmd = args[0];
                 String att = args[1];
 
-                switch (cmd) {
-                    case "-e":  // hide message
-                        prepareMessageFile();  // prepare from plain file into hex version
-                        HideMessage hideMessage = new HideMessage(readMessage(), path);
+                if (Integer.parseInt(att.substring(1)) < 1 || Integer.parseInt(att.substring(1)) > 4) printWrongArg();
+                else {
+                    switch (cmd) {
+                        case "-e":  // hide message
+                            prepareMessageFile();  // prepare from plain file into hex version
+                            HideMessage hideMessage = new HideMessage(readMessage(), path);
+                            hideMessage.doHideMessage(att);
+                            break;
 
-                        switch (att) {
-                            case "-1":  // additional space at the end of the line
-                                hideMessage.Option1();
-                                break;
+                        case "-d":  // unhide message
+                            UnhideMessage unhideMessage = new UnhideMessage(path);
+                            unhideMessage.doUnhideMessage(att);
+                            break;
 
-                            case "-2":  // single or double space
-                                hideMessage.Option2();
-                                break;
-
-                            case "-3":  // typos in attribute names
-                                hideMessage.Option3();
-                                break;
-
-                            case "-4":  // sequences closing and opening tags
-                                hideMessage.Option4();
-                                break;
-
-                            default:
-                                printWrongArg();
-                                break;
-                        }
-
-                        break;
-
-                    case "-d":  // unhide message
-                        UnhideMessage unhideMessage = new UnhideMessage();
-
-                        switch (att) {
-                            case "-1":  // additional space at the end of the line
-                                unhideMessage.Option1();
-                                break;
-
-                            case "-2":  // single or double space
-                                unhideMessage.Option2();
-                                break;
-
-                            case "-3":  // typos in attribute names
-                                unhideMessage.Option3();
-                                break;
-
-                            case "-4":  // sequences closing and opening tags
-                                unhideMessage.Option4();
-                                break;
-
-                            default:
-                                printWrongArg();
-                                break;
-                        }
-                        break;
-
-                    default:
-                        printWrongArg();
-                        break;
+                        default:
+                            printWrongArg();
+                            break;
+                    }
                 }
             }
         } catch (Exception e) {
@@ -90,12 +50,14 @@ public class Stegano {
             BufferedWriter writer = new BufferedWriter(new FileWriter(path + "/mess.txt"));
             Scanner scanner = new Scanner(new File(path + "/plain_mess.txt"));
 
+            int row = 1;
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 String prepared_line = convertToHex(line);
 
-                System.out.printf("orig line:\n%s\n\n", line);
-                System.out.printf("prepared lines:\n%s\n\n", prepared_line);
+                System.out.printf("ROW %d:\n", row++);
+                System.out.printf("> plain line:\n%s\n", line);
+                System.out.printf("> prepared lines:\n%s\n\n", prepared_line);
 
                 writer.write(prepared_line);
                 writer.write('\n');
