@@ -68,13 +68,13 @@ public class HideMessage {
 
     // additional space at the end of the line
     private String additionalSpaceAtEndOfLine(String line) {
-        StringBuilder preparedLine = new StringBuilder();
-        preparedLine.append(rtrim(line));
+        StringBuilder prepared_line = new StringBuilder();
+        prepared_line.append(rtrim(line));
 
         // 0 - no space, 1 - space
         int bin = this.getBin();
-        if (bin == 1) preparedLine.append(' ');
-        return preparedLine.toString();
+        if (bin == 1) prepared_line.append(' ');
+        return prepared_line.toString();
     }
 
     // single or double space
@@ -85,61 +85,63 @@ public class HideMessage {
 
         // 1. format line based on original but with one space in '<', '>' tags
         // 2. do hide based od formatted line
-        StringBuilder formattedLine = new StringBuilder();
-        StringBuilder preparedLine = new StringBuilder();
+        StringBuilder formatted_line = new StringBuilder();
+        StringBuilder prepared_line = new StringBuilder();
 
         for (char c : line.toCharArray()) {
             if (c == '<') open_tag = true;
             else if (c == '>') close_tag = true;
 
-            // if the char isn't within tags then add to preparedLine variable
-            // if the char is after '<' char then add to formattedLine variable
-            // if the char is equal to '>' char then add to formattedLine variable and remove all duplicate spaces
+            // if the char isn't within tags then add to prepared_line variable
+            // if the char is after '<' char then add to formatted_line variable
+            // if the char is equal to '>' char then add to formatted_line variable and remove all duplicate spaces
             // after that do hide the message
-            if (!open_tag && !close_tag) preparedLine.append(c);
-            else if (open_tag && !close_tag) formattedLine.append(c);
+            if (!open_tag && !close_tag) prepared_line.append(c);
+            else if (open_tag && !close_tag) formatted_line.append(c);
             else if (open_tag) {
-                formattedLine.append(c);
+                formatted_line.append(c);
                 open_tag = false;
                 close_tag = false;
 
                 // remove duplicate spaces and hide the message
-                String temp = formattedLine.toString().replaceAll(" +", " ");
+                String temp = formatted_line.toString().replaceAll(" +", " ");
                 for (char c2 : temp.toCharArray()) {
-                    preparedLine.append(c2);
+                    prepared_line.append(c2);
                     if (c2 == ' ') {
                         int bin = this.getBin();
 
                         // if 0 the single space, if 1 then duplicate space
-                        if (bin == 1) preparedLine.append(' ');
+                        if (bin == 1) prepared_line.append(' ');
                     }
                 }
             }
         }
 
-        return preparedLine.toString();
+        return prepared_line.toString();
     }
 
     // typos in attribute names
     private String typosInAttributeNames(String line) {
-        StringBuilder preparedLine = new StringBuilder();
+        StringBuilder prepared_line = new StringBuilder();
+        String formatted_line = line.replaceAll("style=\"margin_botom:10px;\"", "");
+        formatted_line = line.replaceAll("style=\"pading-top:5px;\"", "");
 
         // if contains div then hide message in tag, otherwise take whole line and take next line
-        if (line.contains("<div")) {
-            String[] splittedLine = splitBySpace(line);
+        if (formatted_line.contains("<div")) {
+            String[] splittedLine = splitBySpace(formatted_line);
 
             for (String s : splittedLine) {
-                preparedLine.append(s);
+                prepared_line.append(s);
                 if (s.contains("<div")) {
                     int bin = this.getBin();
                     // 0 - margin-botom:10px, 1 - pading-top:5px
-                    if (bin == 0) preparedLine.append("style=\"margin_botom:10px;\" ");
-                    else if (bin == 1) preparedLine.append("style=\"pading-top:5px;\" ");
+                    if (bin == 0) prepared_line.append("style=\"margin_botom:10px;\" ");
+                    else if (bin == 1) prepared_line.append("style=\"pading-top:5px;\" ");
                 }
             }
-        } else preparedLine.append(line);
+        } else prepared_line.append(formatted_line);
 
-        return preparedLine.toString();
+        return prepared_line.toString();
     }
 
     /*

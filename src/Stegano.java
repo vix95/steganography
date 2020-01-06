@@ -19,8 +19,11 @@ public class Stegano {
                     switch (cmd) {
                         case "-e":  // hide message
                             prepareMessageFile();  // prepare from plain file into hex version
-                            HideMessage hideMessage = new HideMessage(readMessage(), path);
-                            hideMessage.doHideMessage(att);
+                            ArrayList<String> message = readMessage();
+                            if (message != null && message.size() > 0) {
+                                HideMessage hideMessage = new HideMessage(message, path);
+                                hideMessage.doHideMessage(att);
+                            } else System.out.print("The message is empty.");
                             break;
 
                         case "-d":  // unhide message
