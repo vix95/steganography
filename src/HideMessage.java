@@ -74,8 +74,7 @@ public class HideMessage {
                 System.out.printf("Rows: %d\nSequences: %d\n", this.line_qty, this.sequences_qty);
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            //System.out.print("Error: something goes wrong. Cannot hide message.\n");
+            System.out.print("Error: something goes wrong. Cannot hide message. Check your cover.html file.\n");
         }
     }
 
@@ -127,6 +126,11 @@ public class HideMessage {
                         if (bin == 1) prepared_line.append(' ');
                     }
                 }
+
+                formatted_line = new StringBuilder();
+            } else { // if close_tag is true
+                prepared_line.append(c);
+                close_tag = false;
             }
         }
 

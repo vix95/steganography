@@ -18,12 +18,14 @@ public class Stegano {
                 else {
                     switch (cmd) {
                         case "-e":  // hide message
-                            prepareMessageFile();  // prepare from plain file into hex version
-                            ArrayList<String> message = readMessage();
-                            if (message != null && message.size() > 0) {
-                                HideMessage hideMessage = new HideMessage(message, path);
-                                hideMessage.doHideMessage(att);
-                            } else System.out.print("The message is empty.");
+                            if (prepareMessageFile()) { // prepare from plain file into hex version
+                                ArrayList<String> message = readMessage();
+                                if (message != null && message.size() > 0) {
+                                    HideMessage hideMessage = new HideMessage(message, path);
+                                    hideMessage.doHideMessage(att);
+                                } else System.out.print("The message is empty.");
+                            }
+
                             break;
 
                         case "-d":  // unhide message
@@ -48,7 +50,7 @@ public class Stegano {
         return builder.toString();
     }
 
-    private static void prepareMessageFile() {
+    private static boolean prepareMessageFile() {
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(path + "/mess.txt"));
             Scanner scanner = new Scanner(new File(path + "/plain_mess.txt"));
@@ -68,8 +70,10 @@ public class Stegano {
 
             writer.close();
             scanner.close();
+            return true;
         } catch (Exception e) {
             System.out.print("Error: something goes wrong, check your plain_mess.txt file.\n");
+            return false;
         }
     }
 

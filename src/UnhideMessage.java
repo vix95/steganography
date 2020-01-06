@@ -67,9 +67,9 @@ public class UnhideMessage {
 
             System.out.printf("Unhiding done with attribute %s\n", att);
             System.out.printf("Rows: %d\nSequences: %d\n", this.line_qty, this.sequences_qty);
+            this.printDetectedMessage();
         } catch (Exception e) {
-            e.printStackTrace();
-            //System.out.print("Error: something goes wrong. Cannot unhide message.\n");
+            System.out.print("Error: something goes wrong. Cannot unhide message. Check your watermark.html file.\n");
         }
     }
 
@@ -166,6 +166,20 @@ public class UnhideMessage {
                     builder = new StringBuilder();
                 }
             }
+        }
+    }
+
+    private void printDetectedMessage() {
+        Scanner scanner;
+
+        try {
+            scanner = new Scanner(new File(this.detectFilePath));
+            StringBuilder builder = new StringBuilder();
+            while (scanner.hasNextLine()) builder.append(scanner.nextLine());
+            scanner.close();
+            System.out.printf("The detected message:\n%s\n", builder.toString());
+        } catch (Exception e) {
+            System.out.print("Error: message file not found\n");
         }
     }
 }
