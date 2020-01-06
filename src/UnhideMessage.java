@@ -24,10 +24,23 @@ public class UnhideMessage {
                 String line = scanner.nextLine();
                 this.line_qty++;
 
-                if (att.equals("-1")) this.additionalSpaceAtEndOfLine(line);
-                else if (att.equals("-2")) this.singleOrDoubleSpace(line);
-                else if (att.equals("-3")) this.typosInAttributeNames(line);
-                //else if (att.equals("-4")) prepared_line = sequencesClosingAndOpeningTags(line);
+                switch (att) {
+                    case "-1":
+                        this.additionalSpaceAtEndOfLine(line);
+                        break;
+
+                    case "-2":
+                        this.singleOrDoubleSpace(line);
+                        break;
+
+                    case "-3":
+                        this.typosInAttributeNames(line);
+                        break;
+
+                    case "-4":
+                        this.sequencesClosingAndOpeningTags(line);
+                        break;
+                }
             }
 
             scanner.close();
@@ -107,13 +120,28 @@ public class UnhideMessage {
         }
     }
 
-    /*
     // sequences closing and opening tags
-    private String sequencesClosingAndOpeningTags(String line) {
+    private void sequencesClosingAndOpeningTags(String line) {
+        if (line.contains("<FONT>")) {
+            // one sequence has 19 chars, second sequence has 20 chars
+            // I need to pass one char after detect 19 char sequences
+            boolean pass_seq = false;
 
+            for (int i = 0; i <= line.length() - 20; i++) {
+                String s = line.substring(i, i + 20);
+
+                // 0 - </FONT><FONT></FONT> (20 chars), 1 - <FONT></FONT><FONT> (19 chars)
+                if (!pass_seq) {
+                    if (s.contains("<FONT></FONT><FONT>")) {
+                        pass_seq = true;
+                        this.addBinToArray(1);
+                    } else if (s.contains("</FONT><FONT></FONT>")) {
+                        this.addBinToArray(0);
+                    }
+                } else pass_seq = false;
+            }
+        }
     }
-
-     */
 
     private void addBinToArray(int bin) {
         this.binariesArrayList.add(bin);

@@ -14,7 +14,7 @@ public class HideMessage {
     private int hex_pos = 0;
     private int line_qty = 0;
     private int sequences_qty = 0;
-    private int message_bits_qty = 0;
+    private int message_bits_qty;
     private final static Pattern RTRIM = Pattern.compile("\\s+$");
 
     public HideMessage(ArrayList<String> message, String path) {
@@ -38,10 +38,23 @@ public class HideMessage {
                 String prepared_line = null;
                 this.line_qty++;
 
-                if (att.equals("-1")) prepared_line = this.additionalSpaceAtEndOfLine(line);
-                else if (att.equals("-2")) prepared_line = this.singleOrDoubleSpace(line);
-                else if (att.equals("-3")) prepared_line = this.typosInAttributeNames(line);
-                //else if (att.equals("-4")) prepared_line = sequencesClosingAndOpeningTags(line);
+                switch (att) {
+                    case "-1":
+                        prepared_line = this.additionalSpaceAtEndOfLine(line);
+                        break;
+
+                    case "-2":
+                        prepared_line = this.singleOrDoubleSpace(line);
+                        break;
+
+                    case "-3":
+                        prepared_line = this.typosInAttributeNames(line);
+                        break;
+
+                    case "-4":
+                        prepared_line = this.sequencesClosingAndOpeningTags(line);
+                        break;
+                }
 
                 if (prepared_line != null) {
                     writer.write(prepared_line);
@@ -72,7 +85,7 @@ public class HideMessage {
         prepared_line.append(rtrim(line));
 
         // 0 - no space, 1 - space
-        int bin = this.getBin();
+        int bin = this.getBit(true);
         if (bin == 1) prepared_line.append(' ');
         return prepared_line.toString();
     }
@@ -108,7 +121,7 @@ public class HideMessage {
                 for (char c2 : temp.toCharArray()) {
                     prepared_line.append(c2);
                     if (c2 == ' ') {
-                        int bin = this.getBin();
+                        int bin = this.getBit(true);
 
                         // if 0 the single space, if 1 then duplicate space
                         if (bin == 1) prepared_line.append(' ');
@@ -123,18 +136,19 @@ public class HideMessage {
     // typos in attribute names
     private String typosInAttributeNames(String line) {
         StringBuilder prepared_line = new StringBuilder();
-        String formatted_line = line.replaceAll("style=\"margin_botom:10px;\"", "");
-        formatted_line = line.replaceAll("style=\"pading-top:5px;\"", "");
+        String formatted_line = line
+                .replaceAll("style=\"margin_botom:10px;\"", "")
+                .replaceAll("style=\"pading-top:5px;\"", "");
 
         // if contains div then hide message in tag, otherwise take whole line and take next line
-        if (formatted_line.contains("<div")) {
-            String[] splittedLine = splitBySpace(formatted_line);
+        if (formatted_line.contains("<div") || formatted_line.contains("<DIV")) {
+            String[] splitted_line = splitBySpace(formatted_line);
 
-            for (String s : splittedLine) {
+            for (String s : splitted_line) {
                 prepared_line.append(s);
-                if (s.contains("<div")) {
-                    int bin = this.getBin();
+                if (s.contains("<div") || s.contains("<DIV")) {
                     // 0 - margin-botom:10px, 1 - pading-top:5px
+                    int bin = this.getBit(true);
                     if (bin == 0) prepared_line.append("style=\"margin_botom:10px;\" ");
                     else if (bin == 1) prepared_line.append("style=\"pading-top:5px;\" ");
                 }
@@ -144,20 +158,56 @@ public class HideMessage {
         return prepared_line.toString();
     }
 
-    /*
     // sequences closing and opening tags
     private String sequencesClosingAndOpeningTags(String line) {
+        StringBuilder prepared_line = new StringBuilder();
+        String formatted_line = line
+                .replaceAll("<font>", "<FONT>")
+                .replaceAll("</font>", "</FONT>")
+                .replaceAll("<FONT></FONT></FONT>", "<FONT>")
+                .replaceAll("</FONT><FONT></FONT>", "</FONT>");
 
+        // if contains FONT then hide message as duplicate, otherwise take whole line and take next line
+        if (formatted_line.contains("<FONT>") || formatted_line.contains("</FONT>")) {
+            prepared_line = sequencesByTag(formatted_line);
+        } else prepared_line.append(formatted_line);
+
+        return prepared_line.toString()
+                .replaceAll("<FONT_0>", "</FONT><FONT></FONT>")
+                .replaceAll("<FONT_1>", "<FONT></FONT><FONT>");
     }
 
-     */
+    private StringBuilder sequencesByTag(String line) {
+        StringBuilder prepared_line = new StringBuilder();
 
-    private int getBin() {
+        for (int i = 0; i <= line.length() - 7; i++) {
+            String s = line.substring(i, i + 7);
+
+            // 0 - </FONT><FONT></FONT>, 1 - <FONT></FONT><FONT>
+            if (s.substring(0, 6).equals("<FONT>") && this.getBit(false) == 1) {
+                this.nextBit();
+                prepared_line.append("<FONT_1>");
+                i += 5;
+            } else if (s.equals("</FONT>") && this.getBit(false) == 0) {
+                this.nextBit();
+                prepared_line.append("<FONT_0>");
+                i += 6;
+            } else {
+                prepared_line.append(line, i, i + 1);
+            }
+        }
+
+        prepared_line.append(line, line.length() - 6, line.length());
+
+        return prepared_line;
+    }
+
+    private int getBit(boolean next_bit) {
         if (this.hex_pos < this.message.size()) {
             String binaries = hexToBin(this.message.get(this.hex_pos));
             int bin = binaries.toCharArray()[this.bit_pos] - 48;
-            this.nextBit();
-            this.sequences_qty++;
+            if (next_bit) this.nextBit();
+
             return bin;
         }
 
@@ -166,6 +216,7 @@ public class HideMessage {
 
     private void nextBit() {
         this.bit_pos++;
+        this.sequences_qty++;
         if (this.bit_pos > 7) {
             this.bit_pos = 0;
             this.hex_pos++;
@@ -173,17 +224,17 @@ public class HideMessage {
     }
 
     private String[] splitBySpace(String line) {
-        String[] splittedLine = line.split(" ");
-        for (int i = 0; i < splittedLine.length; i++) {
-            if (i < splittedLine.length - 1) {
+        String[] splitted_line = line.split(" ");
+        for (int i = 0; i < splitted_line.length; i++) {
+            if (i < splitted_line.length - 1) {
                 StringBuilder builder = new StringBuilder();
-                for (char c : splittedLine[i].toCharArray()) builder.append(c);
+                for (char c : splitted_line[i].toCharArray()) builder.append(c);
                 builder.append(' ');
-                splittedLine[i] = builder.toString();
+                splitted_line[i] = builder.toString();
             }
         }
 
-        return splittedLine;
+        return splitted_line;
     }
 
     private static String rtrim(String s) {
