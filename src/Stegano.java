@@ -57,7 +57,7 @@ public class Stegano {
 
                 System.out.printf("ROW %d:\n", row++);
                 System.out.printf("> plain line:\n%s\n", line);
-                System.out.printf("> prepared lines:\n%s\n\n", prepared_line);
+                System.out.printf("> prepared line:\n%s\n\n", prepared_line);
 
                 writer.write(prepared_line);
                 writer.write('\n');
